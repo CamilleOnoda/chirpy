@@ -27,8 +27,7 @@ func (cfg *apiConfig) handlerChirpCreate(w http.ResponseWriter, r *http.Request)
 		UserID uuid.UUID `json:"user_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&chirp); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Error decoding JSON"))
+		http.Error(w, "Error decodng JSON", http.StatusBadRequest)
 		return
 	}
 	token, err := auth.GetBearerToken(r.Header)

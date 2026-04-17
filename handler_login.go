@@ -61,6 +61,7 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		Email:        dbUser.Email,
 		Token:        token,
 		RefreshToken: dbToken.Token,
+		IsChirpyRed:  dbUser.IsChirpyRed,
 	}
 
 	w.WriteHeader(http.StatusOK)
