@@ -16,6 +16,7 @@ type apiConfig struct {
 	fileserverHits atomic.Int32
 	db             *database.Queries
 	platform       string
+	jwt_secret     string
 }
 
 func main() {
@@ -28,8 +29,9 @@ func main() {
 	defer db.Close()
 
 	cfg := &apiConfig{
-		db:       database.New(db),
-		platform: os.Getenv("PLATFORM"),
+		db:         database.New(db),
+		platform:   os.Getenv("PLATFORM"),
+		jwt_secret: os.Getenv("JWT_SECRET"),
 	}
 
 	mux := http.NewServeMux()
@@ -50,6 +52,8 @@ func main() {
 
 	mux.HandleFunc("GET /api/chirps", cfg.handlerGetChirps)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", cfg.handlerGetChirpByID)
+	mux.HandleFunc("POST /api/refresh", cfg.handlerRefresh)
+	mux.HandleFunc("POST /api/revoke", cfg.handlerRevoke)
 
 	srv := &http.Server{
 		Addr:    ":8080",
