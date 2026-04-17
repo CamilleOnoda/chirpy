@@ -3,15 +3,30 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/CamilleOnoda/chirpy/internal/database"
+	"github.com/google/uuid"
 )
 
 func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	dbChirps, err := cfg.db.GetAllChirps(r.Context())
+
+	var dbChirps []database.Chirp
+	var err error
+
+	authorID := r.URL.Query().Get("author_id")
+	if authorID == "" {
+		dbChirps, err = cfg.db.GetAllChirps(r.Context())
+	} else {
+		id, parseErr := uuid.Parse(authorID)
+		if parseErr != nil {
+			http.Error(w, "Invalid UUID format", http.StatusBadRequest)
+			return
+		}
+		dbChirps, err = cfg.db.GetChirpsByAuthor(r.Context(), id)
+	}
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Couldn't retrieve chirps."))
-		return
+		http.Error(w, "Couldn't retrieve chirps.", http.StatusInternalServerError)
 	}
 	chirps := []Chirp{}
 	for _, dbChirp := range dbChirps {
