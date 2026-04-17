@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/CamilleOnoda/chirpy/internal/auth"
 	"github.com/CamilleOnoda/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -30,14 +31,26 @@ func (cfg *apiConfig) handlerChirpCreate(w http.ResponseWriter, r *http.Request)
 		w.Write([]byte("Error decoding JSON"))
 		return
 	}
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		http.Error(w, "Error fetching token.", http.StatusUnauthorized)
+		return
+	}
+	validToken, err := auth.ValidateJWT(token, cfg.jwt_secret)
+	if err != nil {
+		http.Error(w, "Error validating token.", http.StatusUnauthorized)
+		return
+	}
+
 	cleanedChirp, err := validateChirp(chirp.Body)
 	if err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
+
 	dbChirp, err := cfg.db.CreateChirp(r.Context(), database.CreateChirpParams{
 		Body:   cleanedChirp,
-		UserID: chirp.UserID,
+		UserID: validToken,
 	})
 	if err != nil {
 		http.Error(w, "Error creating chirp", http.StatusBadRequest)
