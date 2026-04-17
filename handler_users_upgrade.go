@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/CamilleOnoda/chirpy/internal/auth"
 	"github.com/CamilleOnoda/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -15,6 +16,15 @@ func (cfg *apiConfig) handlerUpgrade(w http.ResponseWriter, r *http.Request) {
 		Data  struct {
 			UserID uuid.UUID `json:"user_id"`
 		} `json:"data"`
+	}
+	apiKey, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+	if apiKey != cfg.polka_key {
+		http.Error(w, "Wrong API Key", http.StatusUnauthorized)
+		return
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
