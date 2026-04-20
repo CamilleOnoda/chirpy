@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/CamilleOnoda/chirpy/internal/auth"
-	"github.com/CamilleOnoda/chirpy/internal/database"
 	"github.com/google/uuid"
 )
 
@@ -33,10 +32,7 @@ func (cfg *apiConfig) handlerUpgrade(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user.Event == "user.upgraded" {
-		_, err := cfg.db.UpgradeByID(r.Context(), database.UpgradeByIDParams{
-			IsChirpyRed: true,
-			ID:          user.Data.UserID,
-		})
+		_, err := cfg.db.UpgradeByID(r.Context(), user.Data.UserID)
 		if err != nil {
 			http.Error(w, "Error upgrading user", http.StatusNotFound)
 		}
