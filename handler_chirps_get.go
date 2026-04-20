@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"slices"
 
 	"github.com/CamilleOnoda/chirpy/internal/database"
 	"github.com/google/uuid"
@@ -14,6 +15,7 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 	var dbChirps []database.Chirp
 	var err error
 
+	sortOrder := r.URL.Query().Get("sort")
 	authorID := r.URL.Query().Get("author_id")
 	if authorID == "" {
 		dbChirps, err = cfg.db.GetAllChirps(r.Context())
@@ -28,6 +30,7 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Couldn't retrieve chirps.", http.StatusInternalServerError)
 	}
+
 	chirps := []Chirp{}
 	for _, dbChirp := range dbChirps {
 		chirps = append(chirps, Chirp{
@@ -38,6 +41,13 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 			UserID:    dbChirp.UserID,
 		})
 	}
+	slices.SortFunc(chirps, func(a, b Chirp) int {
+		if sortOrder == "desc" {
+			return b.CreatedAt.Compare(a.CreatedAt)
+		}
+		return a.CreatedAt.Compare(b.CreatedAt)
+	})
+
 	data, err := json.Marshal(chirps)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
