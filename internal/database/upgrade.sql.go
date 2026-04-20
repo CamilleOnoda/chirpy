@@ -13,18 +13,13 @@ import (
 
 const upgradeByID = `-- name: UpgradeByID :one
 UPDATE users
-SET is_chirpy_red = $1
-WHERE id = $2
+SET is_chirpy_red = true
+WHERE id = $1
 RETURNING id, created_at, updated_at, email, hashed_password, is_chirpy_red
 `
 
-type UpgradeByIDParams struct {
-	IsChirpyRed bool
-	ID          uuid.UUID
-}
-
-func (q *Queries) UpgradeByID(ctx context.Context, arg UpgradeByIDParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, upgradeByID, arg.IsChirpyRed, arg.ID)
+func (q *Queries) UpgradeByID(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, upgradeByID, id)
 	var i User
 	err := row.Scan(
 		&i.ID,
