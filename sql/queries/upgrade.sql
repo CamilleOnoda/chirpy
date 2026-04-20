@@ -1,5 +1,5 @@
 -- name: UpgradeByID :one
 UPDATE users
-SET is_chirpy_red = $1
-WHERE id = $2
+SET is_chirpy_red = true
+WHERE id = $1
 RETURNING *;
